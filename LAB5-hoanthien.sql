@@ -1,0 +1,109 @@
+﻿CREATE DATABASE QLHH;
+CREATE TABLE MATHANG(
+	MAHANG VARCHAR(4) PRIMARY KEY,
+	TENHANG NVARCHAR(40),
+	DONGIA MONEY
+)
+
+CREATE TABLE KHACHHANG
+(
+	MAKH VARCHAR(4) PRIMARY KEY,
+	NGAYSINH DATE,
+	TENKH NVARCHAR(20),
+	GIOITINH NVARCHAR(4),
+	QUEQUAN NVARCHAR(20)
+)
+CREATE TABLE HOADON
+(
+	SOPHIEU VARCHAR(4) PRIMARY KEY,
+	NGAYLAP DATE,
+	MAKH VARCHAR(4) REFERENCES dbo.KHACHHANG
+)
+CREATE TABLE CTHOADON
+(
+	SOPHIEU VARCHAR(4),
+	MAHANG VARCHAR(4),
+	PRIMARY KEY(SOPHIEU,MAHANG),
+	SOLUONG INT,
+	FOREIGN KEY(SOPHIEU) REFERENCES dbo.HOADON(SOPHIEU),
+	FOREIGN KEY(MAHANG) REFERENCES dbo.MATHANG(MAHANG)
+)
+
+INSERT INTO dbo.MATHANG(MAHANG,TENHANG,DONGIA)VALUES
+('M1', N'Dưỡng môi Ohui',200000),
+('M2',N'Tinh chât Ohui',1000000),
+('M3',N'Kem dưỡng Ohui',550000)
+INSERT INTO dbo.KHACHHANG(MAKH,NGAYSINH,TENKH,GIOITINH,QUEQUAN)
+VALUES('K1','2000-12-01',N'Trần Diệu Vy',N'Nữ',N'Hà Nội'),
+('K2','2006-03-02',N'Trần Đình Trọng', N'Nam',N'Thái Bình'),
+('K3','2013-03-14',N'Minh Hà',N'Nữ',N'Sài Gòn'),
+('K4','2000-12-21',N'Trương Tiến Dũng',N'Nam',N'Đà Lạt')
+
+INSERT INTO dbo.HOADON
+(
+    SOPHIEU,
+    NGAYLAP,
+	MAKH
+)
+VALUES('P1','2022-1-1','K1'),
+('P2','2022-01-18','K1'),
+('P3','2022-04-18','K3')
+INSERT INTO dbo.CTHOADON(SOPHIEU,MAHANG,SOLUONG)VALUES
+('P1', 'M1', 2),
+('P1', 'M2', 3),
+('P2', 'M2', 1),
+('P1', 'M3', 2),
+--2a
+SELECT MAKH,TENKH,GIOITINH FROM dbo.KHACHHANG WHERE TENKH LIKE N'Trần%' AND QUEQUAN = N'Hà nội'
+--2b
+SELECT *, YEAR(GETDATE()) - YEAR(NGAYSINH) AS Tuoi FROM dbo.KHACHHANG WHERE YEAR(GETDATE()) - YEAR(NGAYSINH) > 20
+--2d
+SELECT MAKH, TENKH  FROM KHACHHANG WHERE MAKH not in (SELECT DISTINCT(MAKH) FROM HOADON)
+
+ --2e
+ select KHACHHANG.MAKH,TENKH,CTHOADON.MAHANG,TENHANG,DONGIA,SOLUONG from KHACHHANG,CTHOADON,MATHANG,HOADON
+ where TENKH=N'Trần Diệu Vy'
+ order by NGAYLAP desc
+ --2f
+ select * from HOADON
+ where MONTH(ngaylap)=01 and YEAR(ngaylap)=2022
+ --3a
+ INSERT INTO dbo.CTHOADON(SOPHIEU,MAHANG,SOLUONG)VALUES
+ ('P3', 'M3', 4)
+ --3b
+ update KHACHHANG
+ set QUEQUAN=N'miền tây'
+ where TENKH =N'Minh Hà'
+ select * from KHACHHANG
+ --3c
+ delete MATHANG
+ where TENHANG= N'Kem dưỡng Ohui'
+ -- không xóa được vì liên kết khóa phụ với CTHOADON,clm MaHang
+ delete from CTHOADON where MAHANG ='m3'
+ delete from MATHANG where TENHANG =N'kem dưỡng ohui'
+
+ --2c
+ select KHACHHANG.MAKH,TENKH,TONGTIEN=SUM(SOLUONG*DONGIA)   from KHACHHANG,MATHANG,CTHOADON,HOADON
+ where KHACHHANG.MAKH = HOADON.MAKH
+group by KHACHHANG.MAKH,TENKH
+having SUM(SOLUONG*DONGIA) >=1000000
+
+--chữa  2c
+select k.makh,tenkh,SUM(SOLUONG*DONGIA)
+from KHACHHANG k join hoadon h on k.makh=h.makh
+join cthoadon c on c.sophieu=h.sophieu
+join mathang m on c.mahang=m.mahang
+group by k.makh,tenkh
+having SUM(SOLUONG*DONGIA) >=1000000
+
+--chữa2d
+select * from KHACHHANG full join HOADON on KHACHHANG.MAKH=HOADON.MAKH
+where SOPHIEU is null
+
+--chữa2e
+select K.MAKH,tenkh,TENHANG
+from KHACHHANG k 
+join hoadon h on k.makh=h.makh
+join cthoadon c on c.sophieu=h.sophieu
+join MATHANG m on c.mahang=m.MAHANG
+group by k.makh,tenkh

@@ -1,0 +1,64 @@
+﻿CREATE DATABASE QLSV
+create TABLE Sinhvien
+(
+	MASV VARCHAR(5) PRIMARY KEY,
+	HOTEN NVARCHAR(30),
+	NGAYSINH DATE,
+	GIOITINH NVARCHAR(4)
+)
+create TABLE MONHOC
+(
+	MAMH VARCHAR(3) PRIMARY KEY,
+	TENMONHOC NVARCHAR(50),
+	SOTINCHI INT
+)
+--
+create TABLE DIEM
+(
+	MASV VARCHAR(5),
+	MAMH VARCHAR(3),
+	PRIMARY KEY(MASV,MAMH),
+	diemthi INT,
+	FOREIGN KEY (MASV) REFERENCES dbo.Sinhvien(MASV),
+	FOREIGN KEY (MAMH) REFERENCES dbo.MONHOC(MAMH)
+)
+
+INSERT INTO dbo.Sinhvien(MASV,HOTEN,NGAYSINH,GIOITINH)
+VALUES('DL001',N'Nguyễn Xuân Chung','1989-11-12',N'NAM'),
+	  ('LT001',N'Nguyễn Thanh Hoa','1988-01-21',N'NAM')
+	  
+
+INSERT INTO dbo.MONHOC
+( MAMH,TENMONHOC,SOTINCHI)
+VALUES('SQL',N'Cở Sở Dữ Liệu SQL Server',3),
+	  ('XML',N'Ngôn ngữ đánh dấu mở rộng',4)
+
+INSERT INTO dbo.DIEM( MASV,MAMH,diemthi)
+VALUES('DL001','SQL',8),
+	  ('DL001','XML',7),
+      ('LT001','SQL',4)
+
+--Câu 2
+SELECT *, YEAR(GETDATE())- YEAR(ngaysinh) AS tuoi FROM dbo.Sinhvien
+
+--Câu 3
+SELECT dbo.Sinhvien.masv, hoten, mamh FROM dbo.Sinhvien INNER JOIN dbo.DIEM ON DIEM.MASV = Sinhvien.MASV WHERE diem.diemthi >= 5
+
+--Cau 4
+select t01.masv,hoten,DTB=avg(diemthi*SOTINCHI) from Sinhvien t01 
+join DIEM t02 on t01.MASV =t02.MASV
+join MONHOC t03 on t02.MAMH = t03.MAMH
+group by t01.MASV,HOTEN
+
+
+
+
+--Câu 5
+SELECT masv, hoten,YEAR(GETDATE()) - YEAR(NGAYSINH) AS TUOI FROM dbo.Sinhvien WHERE YEAR(GETDATE()) - YEAR(NGAYSINH) > 19
+--Cau 6
+INSERT INTO dbo.DIEM( MASV,MAMH,diemthi)
+VALUES('LT001','XML',6)
+--Cau 7
+UPDATE dbo.MONHOC SET SOTINCHI = 4 WHERE MAMH = 'SQL'
+--Cau 8
+DELETE FROM dbo.DIEM WHERE diemthi < 5
